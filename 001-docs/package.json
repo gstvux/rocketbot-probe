@@ -1,0 +1,20 @@
+{
+  "name": "rocketbot-probe-docs",
+  "version": "0.1.0",
+  "description": "Rocketbot probe docs — compila os Markdowns de 001-docs/ em um portal HTML estático (Hub navegável), lendo identidade e caminhos de project.yaml.",
+  "main": "build.js",
+  "scripts": {
+    "build": "node build.js",
+    "dev": "node build.js && node dev-server.js",
+    "serve": "node dev-server.js",
+    "publish": "node build.js && surge ./dist",
+    "redeploy": "node build.js && surge teardown $(cat dist/CNAME) && surge ./dist"
+  },
+  "dependencies": {
+    "marked": "^12.0.1",
+    "js-yaml": "^4.1.0"
+  },
+  "devDependencies": {
+    "surge": "^0.23.1"
+  }
+}

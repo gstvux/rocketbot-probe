@@ -1,0 +1,115 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+#  project.yaml — SSOT (Single Source of Truth) do Rocketbot Probe
+# ═══════════════════════════════════════════════════════════════════════════════
+#  Este é o ÚNICO arquivo que muda por projeto/cliente. As skills e o build (build.js,
+#  transcribe.py) leem daqui para resolver caminhos, identidade e publicação — NÃO se
+#  edita a máquina. Preencha `client` e `name` conforme o projeto (as skills fazem isso
+#  ao processar a call). A pasta `brand:` é padronizada — não a altere.
+#
+#  Fluxo: aponte um vídeo em .sources/ → transcribe.py → skills passos 1–8 → npm run build.
+# ═══════════════════════════════════════════════════════════════════════════════
+
+# ─── IDENTIDADE DO PROJETO ───────────────────────────────────────────────────
+# `client` e `name` começam VAZIOS — são preenchidos SOB DEMANDA (pelas skills, a
+# partir da call). Enquanto vazios, o portal se apresenta só como "Rocketbot probe docs".
+project:
+  name: ""                  # nome legível do processo/projeto (ex.: "Automação Cadastro X")
+  client: ""                # nome do cliente (ex.: "ACME S.A.")
+  rpa_tool: "Rocketbot Studio"
+  process_slug: ""          # slug do processo (kebab-case) — usado em nomes de arquivo
+  version: "0.1.0"          # versionamento do pacote de documentação
+
+# ─── SISTEMAS-ALVO ───────────────────────────────────────────────────────────
+# Inventário dos sistemas que o robô OPERA — NÃO confundir com `rpa_tool` (o ator =
+# Rocketbot). Uma automação real toca vários e de tipos diferentes (não só ERPs).
+# Nasce VAZIO; as skills preenchem a partir da call. Alimenta failure-analysis (SPOF:
+# um `role: source_of_truth` que, se cair, para o processo), o sequenceDiagram de
+# integração (diagram-as-code) e os contratos de integração (contract-engineering).
+systems: []
+# Exemplo (descomente e ajuste conforme os sistemas identificados na call):
+# systems:
+#   - name: "SAP"
+#     kind: "erp"              # erp | web | desktop | terminal | mainframe | file | email | api | database | browser | other
+#     role: "source_of_truth"  # source_of_truth | target | reference | both
+#     access: "PAM"            # como o robô acessa: SSO | PAM (ex.: senhasegura) | credencial | VPN  — opcional
+#     notes: ""                # observações  — opcional
+#   - name: "Planilha de custos"
+#     kind: "file"
+#     role: "reference"
+
+# ─── DISCOVERY (fontes de verdade) ───────────────────────────────────────────
+# O levantamento pode ter MÚLTIPLAS sessões (call inicial + calls de dúvidas). Cada
+# uma é uma entrada em `sessions[]`. A 1ª (role: ssot) é a referência base; as demais
+# (role: detail) confirmam/detalham. transcribe.py resolve os caminhos por sessão
+# (`--session <slug>`; sem flag processa a 1ª = SSOT). Os `.slug` alimentam o painel
+# de citação clicável do portal ([[U####]] / [[P####]]).
+discovery:
+  ssot_type: "video"        # video | meeting | document
+  sources_dir: "sources"    # diretório dos vídeos/áudios BRUTOS (gitignored — só .gitkeep versionado)
+
+  sessions: []
+  # Exemplo (descomente e ajuste ao receber o primeiro vídeo):
+  # sessions:
+  #   - slug: "2026-01-15-levantamento-processo"   # slug canônico p/ .mp3/.json/.txt
+  #     file: "2026-01-15-10-00-00.mp4"            # nome do arquivo dentro de sources_dir
+  #     type: "video"
+  #     date: "2026-01-15"
+  #     duration_minutes: 50
+  #     has_audio: true
+  #     role: "ssot"                               # 1ª sessão = referência base
+  #   - slug: "2026-01-22-call-duvidas"
+  #     file: "2026-01-22-09-00-00.mp4"
+  #     type: "meeting"
+  #     date: "2026-01-22"
+  #     role: "detail"                             # confirma/detalha o SSOT
+  #     client_transcript: "2026-01-22-export.txt" # export bruto do cliente (p/ reconciliar nomes)
+
+# ─── DOCUMENTAÇÃO ────────────────────────────────────────────────────────────
+# Catálogo de slugs → nomes de arquivo. As skills referenciam pelos slugs; para
+# renomear um doc, altere só o valor aqui (nunca nas skills). Estrutura NNN step-10
+# (skill docs-file-ordering). Os arquivos nascem conforme o pipeline gera cada passo.
+docs:
+  root: "001-docs"
+  transcription_dir: "001-docs/transcription"
+
+  files:
+    # Pipeline passos 1–8
+    transcription:         "010-transcricao-sanitizada.md"     # passo 1 (sessão SSOT)
+    transcription_duvidas: "011-transcricao-call-duvidas.md"   # passo 1 (sessões de detalhe)
+    domain_analysis:       "015-analise-dominio.md"            # passo 2 (working doc)
+    domain_events:         "020-eventos-dominio.md"            # passo 2 (catálogo)
+    glossary:              "025-glossario-canonico.md"         # passo 3
+    state_machine:         "030-maquina-estados.md"            # passo 4
+    failures:              "040-falhas.md"                     # passo 5
+    schema:                "050-schema.md"                     # passo 6
+    diagrams:              "060-diagrama.md"                   # passo 7 (Mermaid)
+    bpmn:                  "065-bpmn-processo.md"              # passo 7 (BPMN 2.0)
+    # Entregáveis (passo 8)
+    delta_info:            "070-delta-informacao.md"
+    client_guide:          "080-guia-levantamento-cliente.md"
+    rpa_variables:         "090-guia-variaveis-rocketbot.md"
+    stakeholder_junior:    "100-doc-stakeholder-estagiario.md"
+    senior_insights:       "110-doc-analista-senior-insights.md"
+    # Documento principal (destaque no Hub) — o nome DEVE bater com o arquivo real gerado.
+    pdd:                   "PDD-automacao-processo.md"
+
+# ─── PUBLICAÇÃO ──────────────────────────────────────────────────────────────
+# {{version}} é interpolado do campo project.version (pontos viram hífens no domínio).
+# Resultado: docs-rocketbot-probe-v0-1-0.surge.sh
+publication:
+  platform: "surge"
+  domain_pattern: "docs-rocketbot-probe-v{{version}}"
+
+# ─── IDENTIDADE VISUAL (PADRONIZADA — NÃO ALTERAR) ───────────────────────────
+# Apresentação fixa do build (Rocketbot). Mantida idêntica em todos os projetos para
+# padronizar o portal. Não é ponto de customização.
+brand:
+  name: "Rocketbot"
+  primary_color: "#BC0017"        # Pantone 200C — vermelho principal
+  dark_color: "#263238"           # Pantone 432C — cinza chumbo
+  font_title: "Montserrat"
+  font_body: "IBM Plex Sans"
+  font_mono: "IBM Plex Mono"
+  logo_file: "brand/Isologo.svg"
+  logo_fallback: "R"
+  assets_dir: "001-docs/brand"

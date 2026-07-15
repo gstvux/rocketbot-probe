@@ -1,0 +1,40 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+#  NUNCA commitar arquivos grandes ou segredos. Regra de ouro: vídeo/áudio de call
+#  são pesados (centenas de MB) e ficam SÓ na máquina local. O repositório versiona
+#  texto (docs, skills, config) — não mídia bruta nem chaves de API.
+# ═══════════════════════════════════════════════════════════════════════════════
+
+# ─── Mídia bruta de discovery (vídeos/áudios das calls) — pesados, ficam locais ──
+# A pasta sources/ é versionada VAZIA (só .gitkeep); o conteúdo (mídia) é ignorado.
+.sources/
+sources/*
+!sources/.gitkeep
+*.mp4
+*.mov
+*.mkv
+*.avi
+*.webm
+*.mp3
+*.wav
+*.m4a
+
+# ─── Segredos (chave da API Deepgram) e respostas brutas da API ─────────────────
+.claude/
+*.key.txt
+001-docs/transcription/*.json
+
+# ─── Build, dependências e artefatos ────────────────────────────────────────────
+node_modules/
+001-docs/dist/
+
+# ─── Assets pesados da marca (só o Isologo.svg leve é versionado) ───────────────
+001-docs/brand/*.pdf
+001-docs/brand/*.zip
+
+# ─── Sistema ────────────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+
+# ─── Python ─────────────────────────────────────────────────────────────────────
+__pycache__/
+*.pyc

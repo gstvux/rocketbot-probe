@@ -1,0 +1,38 @@
+# ─── Glossário-SSOT — decodificação no hover (title nativo) ───────────────────
+# Fonte única dos `title` que o build.js injeta em TODO HTML do portal. Cada `- term:`
+# vira um atributo `title` nativo (o leitor passa o mouse e decodifica). SEM dependência.
+#
+#   kind: acronym  → <abbr title="…">SIGLA</abbr>            (siglas/abreviações)
+#   kind: term     → <span class="gloss" title="…">…</span>  (lógica/nomenclatura interna)
+#
+# Regra viva (skill `glossario`): cunhou/encontrou sigla ou nome de lógica interna novo
+# em qualquer doc → adiciona aqui (e a linha humana no 025-glossario-canonico.md).
+# `title` curto (por extenso + 1 linha). Arquivo ausente/vazio ⇒ build roda igual (no-op).
+# AGNÓSTICO: a máquina é genérica; só ESTE arquivo muda por projeto. Os termos abaixo são
+# de MÉTODO (não de domínio) — o vocabulário do cliente é adicionado pela skill.
+
+terms:
+  - term: SSOT
+    kind: acronym
+    title: "Single Source of Truth — Fonte Única da Verdade"
+  - term: PDD
+    kind: acronym
+    title: "Process Design Document — documento de referência do processo"
+  - term: RPA
+    kind: acronym
+    title: "Robotic Process Automation — automação de processos por robôs de software"
+  - term: HITL
+    kind: acronym
+    title: "Human-in-the-Loop — ponto do fluxo que exige decisão/checagem humana"
+  - term: BPMN
+    kind: acronym
+    title: "Business Process Model and Notation — notação padrão de modelagem de processos"
+  - term: AS-IS
+    kind: term
+    title: "O processo como é hoje (estado atual)"
+  - term: TO-BE
+    kind: term
+    title: "O processo como deve ficar após a automação (estado futuro)"
+  - term: SPOF
+    kind: acronym
+    title: "Single Point of Failure — ponto único de falha que derruba o processo inteiro"
