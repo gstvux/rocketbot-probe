@@ -31,7 +31,7 @@ systems: []
 #   - name: "SAP"
 #     kind: "erp"              # erp | web | desktop | terminal | mainframe | file | email | api | database | browser | other
 #     role: "source_of_truth"  # source_of_truth | target | reference | both
-#     access: "PAM"            # como o robô acessa: SSO | PAM (ex.: senhasegura) | credencial | VPN  — opcional
+#     access: "PAM"            # como o robô acessa: SSO | PAM (cofre de senhas) | credencial | VPN  — opcional
 #     notes: ""                # observações  — opcional
 #   - name: "Planilha de custos"
 #     kind: "file"
