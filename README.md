@@ -93,6 +93,40 @@ npm run publish    # build + deploy no Surge (domínio de publication.domain_pat
 
 ---
 
+## Criar documentos além dos iniciais
+
+O pipeline gera a base (`010`–`110`). Para acrescentar docs próprios — decisões de arquitetura,
+esqueleto do robô, mapa de telas do sistema, resiliência/HITL, passo-a-passo, auditorias — bastam 3 passos:
+
+**1. Numere pela convenção NNN step-10** (skill `docs-file-ordering`). Docs principais em múltiplos de 10
+(`120`, `130`…); sub-docs preenchem os gaps (`131`–`139`). Para inserir entre dois existentes, use um gap
+livre; se uma seção passar de 9 sub-docs, promova o conteúdo a uma seção nova (`140`).
+
+**2. Crie `001-docs/NNN-slug.md`** com um `# Título` (H1) na 1ª linha — ele vira o título no portal.
+**O build descobre qualquer `.md` automaticamente** (não precisa registrar nada): já aparece como card em
+"Fontes de Apoio".
+- Registre em `project.yaml → docs.files` (ex.: `arch_decisions: "130-...md"`) **só** se quiser que as
+  **skills** referenciem o doc por slug.
+- Para ser o **doc principal** (destaque no Hub), nomeie-o igual a `docs.files.pdd`.
+
+**3. Compile e publique:** `npm run build` (ou `npm run dev` para ver), depois `npm run publish`.
+
+### Recursos disponíveis em qualquer doc
+
+- **Mermaid** — bloco ` ```mermaid ` renderiza fluxo/estado/sequência.
+- **BPMN 2.0 interativo** — bloco ` ```bpmn ` com o XML → viewer com zoom/pan + botões "Baixar .bpmn" / "Copiar XML".
+- **Imagens/evidências** — `![legenda](../assets/frame.png)` → lightbox automático (a legenda vira `<figcaption>`).
+- **Citação clicável da transcrição** — `[[U0042]](transcription/<slug>.txt)` abre o painel na fala exata.
+- **Decodificação no hover** — siglas/termos do `glossary.yaml` ganham tooltip nativo em todo doc.
+  **Cunhou um termo novo? Adicione ao `glossary.yaml`** (skill `glossario`).
+- **Badges "novo/atualizado"** — derivados do git status, aparecem sozinhos nos cards do Hub.
+
+> Os números `120`+ são livres: use-os para o conhecimento específico do robô/processo que nasce
+> depois do discovery. Precisa de rigor analítico (não só um `.md` solto)? Rode a skill do passo
+> correspondente — as skills 1–8 e o `read-docs` continuam valendo para qualquer doc novo.
+
+---
+
 ## `project.yaml` é a fonte única da verdade
 
 Um único arquivo governa identidade, caminhos, sessões de discovery, publicação e marca. **Não se
