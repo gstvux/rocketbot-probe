@@ -19,13 +19,16 @@ sources/*
 *.m4a
 
 # ─── Segredos (chave da API Deepgram) e respostas brutas da API ─────────────────
-.claude/
+# Ignora tudo em .claude/ (a chave Deepgram vive aqui), MENOS as skills versionadas.
+.claude/*
+!.claude/skills/
 *.key.txt
 001-docs/transcription/*.json
 
 # ─── Build, dependências e artefatos ────────────────────────────────────────────
 node_modules/
 001-docs/dist/
+.driver-shots/          # prints do driver da skill run-rocketbot-probe
 
 # ─── Assets pesados da marca (só o Isologo.svg leve é versionado) ───────────────
 001-docs/brand/*.pdf

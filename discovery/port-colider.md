@@ -1,0 +1,1 @@
+todo: lidar com a colisao de porta para varias docs abertas ao mesmo tempo.

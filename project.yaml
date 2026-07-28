@@ -86,6 +86,7 @@ docs:
     bpmn:                  "065-bpmn-processo.md"              # passo 7 (BPMN 2.0)
     # Entregáveis (passo 8)
     delta_info:            "070-delta-informacao.md"
+    cronograma:            "075-cronograma-executivo.md"        # OPT-IN — fora do pipeline 1–8 (skill `cronograma`; SSOT: cronograma.yaml)
     client_guide:          "080-guia-levantamento-cliente.md"
     rpa_variables:         "090-guia-variaveis-rocketbot.md"
     stakeholder_junior:    "100-doc-stakeholder-estagiario.md"

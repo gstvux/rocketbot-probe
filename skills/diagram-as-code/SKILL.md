@@ -54,7 +54,7 @@ Escolha baseada no tipo de diagrama:
 | Máquina de estados | Mermaid `stateDiagram-v2` | Ciclos de vida, estados e transições |
 | Sequência de mensagens | Mermaid `sequenceDiagram` | Interações entre sistemas/atores |
 | Modelo entidade-relação | Mermaid `erDiagram` | Estrutura de dados e relacionamentos |
-| Gantt/cronograma | Mermaid `gantt` | Linha do tempo de projeto |
+| Gantt/cronograma | **skill `cronograma`** (SSR) · Mermaid `gantt` p/ rascunho | Linha do tempo de projeto — para a **visão executiva** use a skill `cronograma` (dado em `cronograma.yaml`, Gantt renderizado pelo build), não o `gantt` cru |
 | Arquitetura C4 | PlantUML C4 | Contexto, containers, componentes |
 | Infraestrutura cloud | Diagrams (Python) | AWS/GCP/Azure com componentes reais |
 | Mindmap | Mermaid `mindmap` | Hierarquia de conceitos |

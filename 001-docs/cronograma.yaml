@@ -1,0 +1,77 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+#  cronograma.yaml — SSOT do cronograma executivo (OPT-IN)
+# ═══════════════════════════════════════════════════════════════════════════════
+#  DADO separado da APRESENTAÇÃO: este arquivo carrega SÓ o cronograma; o build.js
+#  (renderCronogramaSvg) desenha o SVG. Para renderizar num doc, insira um bloco
+#  ```cronograma (vazio, ou com opções view/today). Ausente ⇒ o build roda igual.
+#
+#  Agendamento: forward-pass a partir de `duracao_estimada` (m|h|d) + `depende_de`.
+#  Datas são OPCIONAIS (meta.inicio ativa o eixo por data dd/mm). Skill: `cronograma`.
+# ═══════════════════════════════════════════════════════════════════════════════
+
+meta:
+  projeto: "Sprints de Automação — EnvioBoletos"
+  versao: "1.0.0"
+  frequencia: "3 Semanas · Dias úteis"
+  inicio: "2026-08-03"        # opcional — ativa o eixo por data (dd/mm) e a semântica de "hoje"
+  hoje: "2026-08-07"          # opcional — posição da linha vertical de progresso
+
+fases:
+  - id: FASE_01
+    nome: "S1 · Fundação"
+    dependencias: []
+    # cor: "#6366F1"          # opcional — sobrescreve a cor da paleta semântica
+    tarefas:
+      - id: TSK_101
+        nome: "Setup + variáveis de ambiente"
+        responsavel: "Agente - RPA"
+        duracao_estimada: 3d
+        depende_de: []
+      - id: TSK_102
+        nome: "loginFNET (OTP)"
+        responsavel: "Agente - RPA"
+        duracao_estimada: 2d
+        depende_de: [TSK_101]
+        critico: true          # gargalo real na trilha → barra com contorno vermelho
+
+  - id: FASE_02
+    nome: "S2 · Miolo & Shadow"
+    dependencias: [FASE_01]
+    tarefas:
+      - id: TSK_201
+        nome: "Títulos + tabela + junção"
+        responsavel: "Agente - RPA"
+        duracao_estimada: 3d
+        depende_de: [TSK_102]
+      - id: TSK_202
+        nome: "Disparo (shadow)"
+        responsavel: "Sistema / Script"
+        duracao_estimada: 2d
+        depende_de: [TSK_201]
+
+  - id: FASE_03
+    nome: "S3 · Validação"
+    dependencias: [FASE_02]
+    tarefas:
+      - id: TSK_301
+        nome: "Orquestração & resiliência"
+        responsavel: "Agente - RPA"
+        duracao_estimada: 2d
+        depende_de: [TSK_202]
+      - id: TSK_302
+        nome: "Homologação + ajustes"
+        responsavel: "Analista Sênior"
+        duracao_estimada: 2d
+        depende_de: [TSK_301]
+      - id: TSK_GATE
+        nome: "Gate de aprovação executiva"
+        responsavel: "Diretor / Executivo"
+        duracao_estimada: 0
+        depende_de: [TSK_302]
+        tipo: gate             # checkpoint de bloqueio (zero-duração) → círculo vermelho
+      - id: TSK_303
+        nome: "Go-Live em produção"
+        responsavel: "Diretor / Executivo"
+        duracao_estimada: 0
+        depende_de: [TSK_GATE]
+        tipo: milestone        # marco (zero-duração) → losango violeta

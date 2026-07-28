@@ -89,6 +89,214 @@ function injectGlossaryTitles(html, annotate) {
   return parts.join('');
 }
 
+// ─── Cronograma executivo (SSR SVG, zero dependência) ────────────────────────
+// AGNÓSTICO: o dado vive em 001-docs/cronograma.yaml; esta máquina (render) é genérica.
+// OPT-IN: sem cronograma.yaml OU sem bloco ```cronograma no doc ⇒ no-op (build roda igual).
+// Modelo: meta + fases[] (cada uma com tarefas[]). O agendamento é um forward-pass a partir
+// de `duracao_estimada` (m|h|d) + `depende_de` (ids) — datas são OPCIONAIS (meta.inicio).
+// Paleta semântica da spec: fase cicla Indigo→Blue→Emerald…; marco=violeta; gate=vermelho.
+const CRONO_PALETTE   = ['#6366F1', '#3B82F6', '#10B981', '#F59E0B', '#EC4899', '#14B8A6', '#0EA5E9'];
+const CRONO_MILESTONE = '#8B5CF6';  // losango (Go-Live)
+const CRONO_GATE      = '#EF4444';  // gate / gargalo (círculo ou contorno crítico)
+const CRONO_DEP       = '#94A3B8';  // linha de dependência (tracejada, sutil)
+const CRONO_TODAY     = '#BC0017';  // linha de "hoje" (vermelho da marca)
+
+function loadCronograma(cronogramaPath) {
+  if (!cronogramaPath || !fs.existsSync(cronogramaPath)) return null;
+  try {
+    const data = yaml.load(fs.readFileSync(cronogramaPath, 'utf-8'));
+    return (data && Array.isArray(data.fases)) ? data : null;
+  } catch (e) {
+    console.warn('⚠️  cronograma.yaml inválido — ignorado:', e.message);
+    return null;
+  }
+}
+
+// "30m" | "2h" | "3d" | "1.5d" | number(minutos) → minutos (d = dia de 24h)
+function cronoDurToMin(v) {
+  if (v == null) return 0;
+  if (typeof v === 'number') return v;
+  const m = String(v).trim().match(/^([\d.]+)\s*([mhd]?)$/i);
+  if (!m) return 0;
+  const n = parseFloat(m[1]);
+  const u = (m[2] || 'm').toLowerCase();
+  return u === 'd' ? n * 1440 : u === 'h' ? n * 60 : n;
+}
+
+// minutos → rótulo humano compacto (3d | 2h | 30m)
+function cronoFmtDur(min) {
+  if (!min || min <= 0) return '';
+  if (min % 1440 === 0) return (min / 1440) + 'd';
+  if (min % 60 === 0)   return (min / 60) + 'h';
+  return min + 'm';
+}
+
+// Recebe o objeto do cronograma + opções do bloco (view/today) → HTML self-contained
+// (um <div> com <svg> inline; sem CDN, sem JS no cliente). PDF/print-friendly.
+function renderCronogramaSvg(data, options) {
+  options = (options && typeof options === 'object' && !Array.isArray(options)) ? options : {};
+  const meta  = data.meta || {};
+  const fases = Array.isArray(data.fases) ? data.fases : [];
+
+  // 1) Achatar tarefas com índice de fase
+  const tasks = [];
+  fases.forEach((f, fi) => (Array.isArray(f.tarefas) ? f.tarefas : []).forEach(t => {
+    const tipo = String(t.tipo || '').toLowerCase();
+    tasks.push({
+      id: t.id, nome: String(t.nome || t.id || ''), phaseIdx: fi,
+      dur: cronoDurToMin(t.duracao_estimada),
+      deps: Array.isArray(t.depende_de) ? t.depende_de : (t.depende_de ? [t.depende_de] : []),
+      tipo, critico: t.critico === true, responsavel: String(t.responsavel || '')
+    });
+  }));
+  if (!tasks.length) return '';
+  const byId = new Map(tasks.map(t => [t.id, t]));
+
+  // 2) Forward-pass: start = max(end das dependências). Memoizado + guarda de ciclo.
+  function startOf(t, seen) {
+    if (t._start != null) return t._start;
+    seen = seen || new Set();
+    if (seen.has(t.id)) return (t._start = 0);
+    seen.add(t.id);
+    let s = 0;
+    t.deps.forEach(d => { const p = byId.get(d); if (p) s = Math.max(s, startOf(p, seen) + p.dur); });
+    return (t._start = s);
+  }
+  tasks.forEach(t => { t.start = startOf(t); t.end = t.start + t.dur; });
+  const total = Math.max(1, ...tasks.map(t => t.end));
+
+  // 3) Geometria (spec: coluna de rótulos fixa à esquerda, barras à direita)
+  const PAD = 24, LABEL_W = 236, AXIS_H = 30, ROW_H = 22, ROW_GAP = 10, PHASE_H = 28, W = 1200;
+  const chartX = PAD + LABEL_W;
+  const chartW = W - chartX - PAD;
+  const sx = v => chartX + (v / total) * chartW;
+  const color = fi => (fases[fi] && fases[fi].cor) ? fases[fi].cor : CRONO_PALETTE[fi % CRONO_PALETTE.length];
+
+  // Linhas: header de fase + tarefas (mantém a ordem autoral); centro-Y por id p/ dependências
+  let y = PAD + AXIS_H;
+  const rows = [];
+  const centerById = new Map();
+  fases.forEach((f, fi) => {
+    rows.push({ type: 'phase', fi, nome: String(f.nome || ('Fase ' + (fi + 1))), y });
+    y += PHASE_H;
+    tasks.filter(t => t.phaseIdx === fi).forEach(t => {
+      rows.push({ type: 'task', t, y });
+      centerById.set(t.id, y + ROW_H / 2);
+      y += ROW_H + ROW_GAP;
+    });
+  });
+  const H = y + PAD;
+
+  // Eixo: granularidade + rótulo (data dd/mm se meta.inicio; senão unidade abstrata)
+  const inicioDate = meta.inicio && /^\d{4}-\d{2}-\d{2}/.test(String(meta.inicio))
+    ? new Date(String(meta.inicio).slice(0, 10) + 'T00:00:00Z') : null;
+  let tick, unitLabel;
+  if (total <= 8 * 60)        { tick = 60;        unitLabel = v => (v / 60) + 'h'; }
+  else if (total <= 6 * 1440) { tick = 1440;      unitLabel = v => 'D' + Math.round(v / 1440 + 1); }
+  else                        { tick = 7 * 1440;  unitLabel = v => 'S' + Math.round(v / (7 * 1440) + 1); }
+  const tickText = v => {
+    if (inicioDate) { const d = new Date(inicioDate.getTime() + v * 60000);
+      return ('0' + d.getUTCDate()).slice(-2) + '/' + ('0' + (d.getUTCMonth() + 1)).slice(-2); }
+    return unitLabel(v);
+  };
+
+  const esc = s => escAttr(s);
+  const trunc = (s, n) => s.length > n ? s.slice(0, n - 1) + '…' : s;
+
+  // 4) Partes do SVG
+  const grid = [];
+  for (let v = 0; v <= total + 1; v += tick) {
+    const x = sx(v);
+    grid.push(`<line x1="${x.toFixed(1)}" y1="${PAD + AXIS_H - 6}" x2="${x.toFixed(1)}" y2="${H - PAD}" stroke="#0F172A" stroke-opacity="0.06" stroke-width="1"/>`);
+    grid.push(`<text x="${x.toFixed(1)}" y="${PAD + AXIS_H - 12}" text-anchor="middle" font-size="10" fill="#94A3B8" font-family="'IBM Plex Mono',monospace">${esc(tickText(v))}</text>`);
+  }
+
+  // Dependências: elo tracejado sutil do predecessor primário (deps[0]) → início da tarefa
+  const deps = [];
+  tasks.forEach(t => {
+    if (!t.deps.length) return;
+    const p = byId.get(t.deps[0]);
+    if (!p) return;
+    const y1 = centerById.get(p.id), y2 = centerById.get(t.id);
+    if (y1 == null || y2 == null || y1 === y2) return;
+    const x1 = sx(p.end), x2 = sx(t.start);
+    const midx = x1 + Math.max(8, (x2 - x1) / 2);
+    deps.push(`<path d="M${x1.toFixed(1)} ${y1.toFixed(1)} H${midx.toFixed(1)} V${y2.toFixed(1)} H${x2.toFixed(1)}" fill="none" stroke="${CRONO_DEP}" stroke-width="1" stroke-dasharray="4 3" stroke-opacity="0.55"/>`);
+  });
+
+  const bars = [], labels = [];
+  rows.forEach(r => {
+    if (r.type === 'phase') {
+      const c = color(r.fi), cy = r.y + PHASE_H / 2;
+      labels.push(`<circle cx="${PAD + 4}" cy="${cy.toFixed(1)}" r="4" fill="${c}"/>`);
+      labels.push(`<text x="${PAD + 14}" y="${(cy + 3.5).toFixed(1)}" font-size="11.5" font-weight="700" fill="#1E293B" font-family="'Montserrat',sans-serif">${esc(trunc(r.nome, 40))}</text>`);
+      return;
+    }
+    const t = r.t, cy = r.y + ROW_H / 2, c = color(t.phaseIdx);
+    // Rótulo à esquerda (100% horizontal, coluna fixa — spec)
+    labels.push(`<text x="${PAD + 14}" y="${(cy + 3.5).toFixed(1)}" font-size="10.5" fill="#475569" font-family="'IBM Plex Sans',sans-serif">${esc(trunc(t.nome, 34))}</text>`);
+    const xs = sx(t.start);
+    if (t.dur === 0 || t.tipo === 'milestone' || t.tipo === 'gate') {
+      // Zero-duração: marco (losango violeta) OU gate/gargalo (círculo vermelho)
+      if (t.tipo === 'gate') {
+        bars.push(`<circle cx="${xs.toFixed(1)}" cy="${cy.toFixed(1)}" r="6.5" fill="${CRONO_GATE}" stroke="#fff" stroke-width="1.5"/>`);
+      } else {
+        const s = 7;
+        bars.push(`<path d="M${xs.toFixed(1)} ${(cy - s).toFixed(1)} L${(xs + s).toFixed(1)} ${cy.toFixed(1)} L${xs.toFixed(1)} ${(cy + s).toFixed(1)} L${(xs - s).toFixed(1)} ${cy.toFixed(1)} Z" fill="${CRONO_MILESTONE}" stroke="#fff" stroke-width="1.5"/>`);
+      }
+      // rótulo do marco/gate: só à ESQUERDA (coluna fixa) — evita corte na borda direita
+    } else {
+      // Barra normal (corner radius 6); crítica ganha contorno vermelho (gargalo na trilha)
+      const xe = sx(t.end), bw = Math.max(3, xe - xs);
+      bars.push(`<rect x="${xs.toFixed(1)}" y="${(cy - ROW_H / 2 + 2).toFixed(1)}" width="${bw.toFixed(1)}" height="${ROW_H - 4}" rx="6" fill="${c}"${t.critico ? ` stroke="${CRONO_GATE}" stroke-width="2"` : ''}/>`);
+      const dtxt = cronoFmtDur(t.dur);
+      if (bw > 44) bars.push(`<text x="${(xs + bw / 2).toFixed(1)}" y="${(cy + 3.2).toFixed(1)}" text-anchor="middle" font-size="9.5" font-weight="600" fill="#fff" font-family="'IBM Plex Mono',monospace">${esc(dtxt)}</text>`);
+      else if (dtxt) bars.push(`<text x="${(xe + 5).toFixed(1)}" y="${(cy + 3.2).toFixed(1)}" font-size="9.5" fill="#94A3B8" font-family="'IBM Plex Mono',monospace">${esc(dtxt)}</text>`);
+    }
+  });
+
+  // Linha de "hoje": options.today | meta.hoje (data ISO se meta.inicio; senão duração)
+  let today = '';
+  const todayRaw = options.today != null ? options.today : meta.hoje;
+  if (todayRaw != null) {
+    let todayMin;
+    if (inicioDate && /^\d{4}-\d{2}-\d{2}/.test(String(todayRaw))) {
+      todayMin = Math.max(0, (new Date(String(todayRaw).slice(0, 10) + 'T00:00:00Z') - inicioDate) / 60000);
+    } else todayMin = cronoDurToMin(todayRaw);
+    if (todayMin >= 0 && todayMin <= total) {
+      const x = sx(todayMin);
+      today = `<line x1="${x.toFixed(1)}" y1="${PAD + AXIS_H - 8}" x2="${x.toFixed(1)}" y2="${H - PAD}" stroke="${CRONO_TODAY}" stroke-width="1.5"/>`
+            + `<text x="${x.toFixed(1)}" y="${H - PAD + 12}" text-anchor="middle" font-size="9" font-weight="700" fill="${CRONO_TODAY}" font-family="'IBM Plex Mono',monospace">hoje</text>`;
+    }
+  }
+
+  // 5) Legenda + header do card
+  const legend = [];
+  fases.forEach((f, fi) => legend.push(
+    `<span style="display:inline-flex;align-items:center;gap:5px;font-size:0.68rem;color:#475569"><span style="width:10px;height:10px;border-radius:3px;background:${color(fi)}"></span>${esc(trunc(String(f.nome || ('Fase ' + (fi + 1))), 28))}</span>`));
+  legend.push(`<span style="display:inline-flex;align-items:center;gap:5px;font-size:0.68rem;color:#475569"><span style="color:${CRONO_MILESTONE};font-size:0.9rem;line-height:1">&#9670;</span>Marco</span>`);
+  legend.push(`<span style="display:inline-flex;align-items:center;gap:5px;font-size:0.68rem;color:#475569"><span style="color:${CRONO_GATE};font-size:0.8rem;line-height:1">&#9679;</span>Gate / gargalo</span>`);
+
+  const titulo = esc(String(meta.projeto || 'Cronograma'));
+  const badges = [];
+  if (meta.frequencia) badges.push(`<span style="font-size:0.62rem;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;color:#4338CA;background:#EEF2FF;border:1px solid #C7D2FE;padding:2px 7px;border-radius:4px">${esc(String(meta.frequencia))}</span>`);
+  if (meta.versao)     badges.push(`<span style="font-size:0.62rem;font-family:'IBM Plex Mono',monospace;color:#64748B">v${esc(String(meta.versao))}</span>`);
+
+  const svg = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Cronograma: ${titulo}" style="width:100%;height:auto;min-width:760px;display:block">`
+    + `<rect x="0" y="0" width="${W}" height="${H}" fill="#F8FAFC"/>`
+    + grid.join('') + deps.join('') + bars.join('') + labels.join('') + today
+    + `</svg>`;
+
+  return `<div class="cronograma-card" style="border:1px solid #E2E8F0;border-radius:10px;background:#F8FAFC;padding:16px 16px 12px;margin:1rem 0;box-shadow:0 1px 2px rgba(15,23,42,0.04)">`
+    + `<div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:6px">`
+    +   `<h4 style="margin:0;font-family:'Montserrat',sans-serif;font-size:0.95rem;font-weight:800;color:#1E293B">${titulo}</h4>`
+    +   `<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">${badges.join('')}</div>`
+    + `</div>`
+    + `<div style="display:flex;gap:14px;flex-wrap:wrap;margin-bottom:8px">${legend.join('')}</div>`
+    + `<div style="overflow-x:auto;-webkit-overflow-scrolling:touch">${svg}</div>`
+    + `</div>`;
+}
+
 // ─── Parser de Transcrição ──────────────────────────────────
 // Suporta formato legado [P000N] e novo formato enriquecido [U000N] com falante/confiança
 function parseTranscript(txtPath) {
@@ -159,6 +367,12 @@ const glossaryPath = path.join(__dirname, 'glossary.yaml');
 const glossary = loadGlossary(glossaryPath);
 const annotateGlossary = buildAnnotator(glossary);
 if (glossary.length) console.log(`🏷️  Glossário: ${glossary.length} termo(s) → title no hover`);
+
+// ─── Carregar cronograma do projeto (SSOT executivo — OPT-IN, convenção) ──
+// Ausente ⇒ null e o bloco ```cronograma vira nota discreta (no-op seguro no build).
+const cronogramaPath = path.join(__dirname, 'cronograma.yaml');
+const cronograma = loadCronograma(cronogramaPath);
+if (cronograma) console.log(`🗓️  Cronograma: ${(cronograma.fases || []).length} fase(s) → SVG SSR`);
 
 // ─── Carregar Transcrição(ões) ───────────────────────────────
 // Suporta `transcription_slug` (string, legado) e `transcription_slugs` (lista).
@@ -1341,7 +1555,25 @@ documents.forEach(doc => {
   bodyHtml = bodyHtml.replace(/href="([^"]+)\.md(#?[^"]*)"/g, 'href="./$1.html$2"');
   bodyHtml = bodyHtml.replace(/src="\.\.\/assets\//g, 'src="./assets/');
   bodyHtml = injectGlossaryTitles(bodyHtml, annotateGlossary);
-  
+
+  // ─── Cronograma: substitui blocos ```cronograma pela visualização SSR ───
+  // Gating por-doc (mesmo padrão de mermaid/bpmn). O corpo do bloco carrega só
+  // OPÇÕES de apresentação (view/today) — o DADO mora em cronograma.yaml (SSOT).
+  if (bodyHtml.includes('language-cronograma')) {
+    bodyHtml = bodyHtml.replace(/<pre><code class="language-cronograma">([\s\S]*?)<\/code><\/pre>/g, (_all, body) => {
+      if (!cronograma) {
+        return '<div style="border:1px dashed #CBD5E1;border-radius:8px;padding:16px;color:#64748B;font-size:0.8rem;background:#F8FAFC">'
+          + '⏳ Cronograma não configurado — crie <code>001-docs/cronograma.yaml</code> para renderizar aqui.</div>';
+      }
+      const optsRaw = body
+        .replace(/&lt;/g, '<').replace(/&gt;/g, '>')
+        .replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&amp;/g, '&');
+      let opts = {};
+      try { opts = yaml.load(optsRaw) || {}; } catch (e) { opts = {}; }
+      return renderCronogramaSvg(cronograma, opts);
+    });
+  }
+
   const hasMermaid = doc.rawContent.includes('```mermaid') || doc.rawContent.includes('class="language-mermaid"');
   // Injeta o viewer bpmn-js apenas em páginas com blocos ```bpmn
   const hasBpmn = doc.rawContent.includes('```bpmn') || bodyHtml.includes('class="language-bpmn"');
