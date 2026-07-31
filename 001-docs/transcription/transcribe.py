@@ -2,7 +2,11 @@
 """
 Transcreve o vídeo SSOT via Deepgram Nova-2 com diarização e utterances.
 
-Configuração lida de project.yaml (repo root) → discovery.sessions[]. Outputs:
+Configuração lida de project.yaml (repo root) → discovery.sessions[]. O vídeo/áudio é lido de
+sources_dir/<slug>/<file> (uma subpasta por sessão). Só se aplica a sessões type: video|meeting —
+sessões type: document (sem áudio) não passam por aqui, são lidas direto (skill transcription-forensics).
+
+Outputs:
   .claude/<slug>.json          — resposta bruta da API
   transcription_dir/<slug>.mp3 — áudio extraído (skip se já existe)
   transcription_dir/<slug>.txt — transcrição estruturada com falantes
@@ -44,7 +48,9 @@ if not sessions:
 if "--list" in sys.argv:
     print("Sessões disponíveis (discovery.sessions[]):")
     for s in sessions:
-        print(f"  - {s['slug']:40s} {s.get('file','?')}  ({s.get('role','—')})")
+        kind  = s.get("type", "?")
+        label = s.get("file") or (", ".join(s.get("docs", [])) or "?")
+        print(f"  - {s['slug']:40s} [{kind}] {label}  ({s.get('role','—')})")
     sys.exit(0)
 
 if "--session" in sys.argv:
@@ -59,8 +65,17 @@ else:
 # ─── Slug e caminhos ─────────────────────────────────────────────────────────
 slug         = session["slug"]
 src_dir      = session.get("sources_dir", disc.get("sources_dir", ".sources"))
+session_dir  = REPO / src_dir / slug   # cada sessão vive em sources_dir/<slug>/
 trans_dir    = REPO / docs["transcription_dir"]
-video        = REPO / src_dir / session["file"]
+
+if session.get("type") == "document":
+    sys.exit(f"ERRO: sessão '{slug}' é do tipo 'document' (sem áudio/vídeo) — não passa por "
+              f"transcribe.py. Leia os arquivos em {session_dir}/ direto (skill transcription-forensics).")
+
+if not session.get("file"):
+    sys.exit(f"ERRO: sessão '{slug}' não declara 'file' (vídeo/áudio) em discovery.sessions[].")
+
+video        = session_dir / session["file"]
 audio        = trans_dir / f"{slug}.mp3"
 json_out     = REPO / ".claude" / f"{slug}.json"
 txt_out      = trans_dir / f"{slug}.txt"

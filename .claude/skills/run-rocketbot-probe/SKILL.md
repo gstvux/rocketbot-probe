@@ -105,17 +105,21 @@ cd 001-docs && npm run dev          # build + serve em :8000  (PORT=8080 troca a
 
 ## Transcribe (pipeline — segundo entry point)
 
-[001-docs/transcription/transcribe.py](001-docs/transcription/transcribe.py) transforma um
-vídeo declarado em `project.yaml → discovery.sessions[]` em `.txt` (ffmpeg → Deepgram). Requer
-`DEEPGRAM_API_KEY` **e** um vídeo real, então aqui só dá para o smoke sem-rede:
+[001-docs/transcription/transcribe.py](001-docs/transcription/transcribe.py) transforma o
+vídeo/áudio de uma sessão declarada em `project.yaml → discovery.sessions[]` em `.txt`
+(ffmpeg → Deepgram). Cada sessão é uma subpasta `sources/<slug>/`; só se aplica a sessões
+`type: video|meeting` — sessões `type: document` (arquivos sem áudio) não passam por aqui,
+são lidas direto pela skill `transcription-forensics`. Requer `DEEPGRAM_API_KEY` **e** um
+vídeo real, então aqui só dá para o smoke sem-rede:
 
 ```bash
 python3 -c "import yaml, httpx; print('deps OK')"                    # pyyaml + httpx
 python3 001-docs/transcription/transcribe.py --list                 # lista sessões e sai (exit 0)
 ```
 
-Transcrição de verdade: ponha o vídeo em `sources/`, declare a sessão em `discovery.sessions[]`,
-`export DEEPGRAM_API_KEY=...`, e rode `transcribe.py` (sem flag = 1ª sessão/SSOT).
+Transcrição de verdade: crie a pasta da sessão em `sources/<slug>/` e ponha o vídeo dentro dela,
+declare a sessão em `discovery.sessions[]` (`slug` = nome da pasta), `export DEEPGRAM_API_KEY=...`,
+e rode `transcribe.py` (sem flag = 1ª sessão/SSOT).
 
 ## Test
 

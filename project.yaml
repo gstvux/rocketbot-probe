@@ -6,7 +6,8 @@
 #  edita a máquina. Preencha `client` e `name` conforme o projeto (as skills fazem isso
 #  ao processar a call). A pasta `brand:` é padronizada — não a altere.
 #
-#  Fluxo: aponte um vídeo em .sources/ → transcribe.py → skills passos 1–8 → npm run build.
+#  Fluxo: crie a pasta da sessão em sources/<slug>/ (vídeo ou documentos) → transcribe.py
+#  (se houver áudio) → skills passos 1–8 → npm run build.
 # ═══════════════════════════════════════════════════════════════════════════════
 
 # ─── IDENTIDADE DO PROJETO ───────────────────────────────────────────────────
@@ -38,31 +39,40 @@ systems: []
 #     role: "reference"
 
 # ─── DISCOVERY (fontes de verdade) ───────────────────────────────────────────
-# O levantamento pode ter MÚLTIPLAS sessões (call inicial + calls de dúvidas). Cada
-# uma é uma entrada em `sessions[]`. A 1ª (role: ssot) é a referência base; as demais
-# (role: detail) confirmam/detalham. transcribe.py resolve os caminhos por sessão
-# (`--session <slug>`; sem flag processa a 1ª = SSOT). Os `.slug` alimentam o painel
-# de citação clicável do portal ([[U####]] / [[P####]]).
+# O levantamento pode ter MÚLTIPLAS sessões (call inicial, calls de dúvidas, documentos
+# entregues pelo cliente...). Cada sessão é uma entrada em `sessions[]` E UMA SUBPASTA em
+# `sources_dir/<slug>/` — todo arquivo que aquela sessão trouxe (vídeo, export do cliente,
+# PDF, planilha) fica dentro dela. A 1ª sessão (role: ssot) é a referência base; as demais
+# (role: detail) CONFIRMAM/DETALHAM o que já existe — o conhecimento novo de cada sessão é
+# incorporado à base atual, nunca a sobrescreve (skill `transcription-forensics` governa
+# essa regra de merge). transcribe.py resolve os caminhos por sessão (`--session <slug>`;
+# sem flag processa a 1ª = SSOT) — só se aplica a sessões `type: video|meeting`; sessões
+# `type: document` são lidas direto, sem transcrição. Os `.slug` alimentam o painel de
+# citação clicável do portal ([[U####]] / [[P####]]).
 discovery:
-  ssot_type: "video"        # video | meeting | document
-  sources_dir: "sources"    # diretório dos vídeos/áudios BRUTOS (gitignored — só .gitkeep versionado)
+  ssot_type: "video"        # video | meeting | document — fallback só usado no formato legado (sem sessions[])
+  sources_dir: "sources"    # cada sessão é uma subpasta: sources_dir/<slug>/ (gitignored — só .gitkeep versionado)
 
   sessions: []
-  # Exemplo (descomente e ajuste ao receber o primeiro vídeo):
+  # Exemplo (descomente e ajuste ao receber a primeira sessão):
   # sessions:
-  #   - slug: "2026-01-15-levantamento-processo"   # slug canônico p/ .mp3/.json/.txt
-  #     file: "2026-01-15-10-00-00.mp4"            # nome do arquivo dentro de sources_dir
-  #     type: "video"
+  #   - slug: "2026-01-15-levantamento-processo"   # nome da subpasta em sources_dir/ e prefixo dos artefatos gerados
+  #     type: "video"                              # video | meeting | document — natureza do material desta sessão
+  #     file: "2026-01-15-10-00-00.mp4"            # arquivo dentro de sources_dir/<slug>/ (vídeo/áudio a transcrever)
   #     date: "2026-01-15"
   #     duration_minutes: 50
-  #     has_audio: true
   #     role: "ssot"                               # 1ª sessão = referência base
   #   - slug: "2026-01-22-call-duvidas"
-  #     file: "2026-01-22-09-00-00.mp4"
   #     type: "meeting"
+  #     file: "2026-01-22-09-00-00.mp4"
   #     date: "2026-01-22"
   #     role: "detail"                             # confirma/detalha o SSOT
-  #     client_transcript: "2026-01-22-export.txt" # export bruto do cliente (p/ reconciliar nomes)
+  #     client_transcript: "2026-01-22-export.txt" # export bruto do cliente, também dentro de sources_dir/<slug>/
+  #   - slug: "2026-02-03-manual-operacional"
+  #     type: "document"                           # sessão sem áudio/vídeo — a pasta só tem documentos
+  #     date: "2026-02-03"
+  #     role: "detail"
+  #     docs: ["manual-operacional.pdf", "planilha-excecoes.xlsx"]  # arquivos dentro de sources_dir/<slug>/, lidos direto (sem transcribe.py)
 
 # ─── DOCUMENTAÇÃO ────────────────────────────────────────────────────────────
 # Catálogo de slugs → nomes de arquivo. As skills referenciam pelos slugs; para

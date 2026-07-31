@@ -29,7 +29,7 @@ Ler: project.yaml  (raiz do repositório)
 - `docs.transcription_dir` — pasta de transcrições brutas
 - `docs.files.*` — catálogo de arquivos com seus nomes reais
 - `brand.*` — identidade visual do projeto
-- `discovery.sessions[]` — **múltiplas** sessões de levantamento (calls/vídeos). A 1ª (`role: ssot`) é a referência base; as seguintes (`role: detail`) confirmam/detalham. Cada uma tem `slug`, `file`, `date` e pode ter sua própria transcrição sanitizada.
+- `discovery.sessions[]` — **múltiplas** sessões de levantamento (calls, vídeos, documentos do cliente). Cada sessão é uma pasta em `discovery.sources_dir/<slug>/`. A 1ª (`role: ssot`) é a referência base; as seguintes (`role: detail`) confirmam/detalham — o conhecimento de cada sessão nova é incorporado à base já existente, nunca a substitui em silêncio. Sessões `type: video|meeting` têm transcrição sanitizada; sessões `type: document` são lidas direto (sem transcribe.py).
 - `systems[]` — inventário dos sistemas-alvo que o robô opera (`name`, `kind`, `role`, `access`). Base para SPOF (failure-analysis) e para os diagramas de integração.
 
 A partir daqui, usar os caminhos resolvidos de `docs.root + docs.files.*`.
@@ -111,6 +111,7 @@ Confirmar ao usuário:
 - Quantos arquivos foram lidos
 - Pendências em aberto encontradas em `delta_info`
 - Se há inconsistências entre documentos que precisam de atenção
+- Se há sessões em `discovery.sources_dir/` (`discovery.sessions[]`) ainda não refletidas nos documentos — conhecimento novo pendente de incorporação
 
 ## Quando NÃO usar esta skill
 

@@ -5,7 +5,8 @@
 # ═══════════════════════════════════════════════════════════════════════════════
 
 # ─── Mídia bruta de discovery (vídeos/áudios das calls) — pesados, ficam locais ──
-# A pasta sources/ é versionada VAZIA (só .gitkeep); o conteúdo (mídia) é ignorado.
+# A pasta sources/ é versionada VAZIA (só .gitkeep); cada sessão vira uma subpasta
+# (sources/<slug>/) com vídeo/áudio/docs — todo o conteúdo é ignorado, só o .gitkeep resta.
 .sources/
 sources/*
 !sources/.gitkeep

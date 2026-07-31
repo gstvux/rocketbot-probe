@@ -1,12 +1,14 @@
 ---
 name: transcription-forensics
 description: >
-  Use esta skill ao receber transcrições de reuniões, vídeos de levantamento, gravações de áudio ou notas
-  brutas de processo RPA — especialmente para projetos Rocketbot. Ativa quando o usuário disser
-  "transcrição", "limpar o texto", "sanitizar reunião", "o que foi dito", "extrair do vídeo", "reunião
-  gravada", ou ao trabalhar com a pasta de docs de um projeto de automação (leia o root em project.yaml → docs.root). Esta skill é o passo 1 do
-  pipeline de documentação RPA: transforma fala bruta em fonte de verdade estruturada sem distorção
-  semântica — preservando entidades, decisões, intenções e contexto que uma limpeza descuidada destruiria.
+  Use esta skill ao receber transcrições de reuniões, vídeos de levantamento, gravações de áudio, notas
+  brutas de processo RPA ou documentos entregues pelo cliente (sessão sem áudio) — especialmente para
+  projetos Rocketbot. Ativa quando o usuário disser "transcrição", "limpar o texto", "sanitizar reunião",
+  "o que foi dito", "extrair do vídeo", "reunião gravada", "processar sessão", "novo documento do
+  cliente", ou ao trabalhar com a pasta de docs de um projeto de automação (leia o root em project.yaml →
+  docs.root). Esta skill é o passo 1 do pipeline de documentação RPA: transforma fala ou documento bruto
+  em fonte de verdade estruturada sem distorção semântica — preservando entidades, decisões, intenções e
+  contexto que uma limpeza descuidada destruiria.
 ---
 
 # Transcription Forensics
@@ -16,8 +18,9 @@ description: >
 ```
 Passo 1 / 8
 
-Entrada : project.yaml → discovery.sessions[].slug  → <transcription_dir>/<slug>.txt
-          project.yaml → discovery.sessions[]        (metadados de cada sessão)
+Entrada : project.yaml → discovery.sessions[]              (metadados de cada sessão)
+          sources_dir/<slug>/                                (pasta da sessão: vídeo/áudio, docs, export do cliente)
+          <transcription_dir>/<slug>.txt                     (saída do transcribe.py — só sessões video|meeting)
 Saída   : project.yaml → docs.files.transcription           (sessão SSOT)
           project.yaml → docs.files.transcription_duvidas   (sessões de detalhe)
 
@@ -30,25 +33,44 @@ Próximo passo  : domain-event-extraction (→ domain_analysis, domain_events)
 
 ---
 
-## Múltiplas sessões de discovery
+## Sessões: a unidade de entrada de conhecimento
+
+Cada sessão é uma **pasta** em `sources_dir/<slug>/` (ex.: `sources/2026-01-15-levantamento-
+processo/`) com todo arquivo que ela trouxe — vídeo/áudio, export do cliente, PDFs, planilhas.
+`discovery.sessions[]` descreve cada pasta: `slug` (= nome da pasta), `type` (`video` |
+`meeting` | `document`), `date`, `role`.
 
 O processo de levantamento pode ter **mais de uma sessão** (call inicial + calls de
-dúvidas/detalhamento). Cada uma é uma entrada em `discovery.sessions[]`:
+dúvidas/detalhamento + documentos entregues depois). Cada nova sessão traz conhecimento que
+**se soma** ao que já existe na base — nunca o substitui em silêncio:
 
 - `role: ssot` — a 1ª sessão, referência base do processo.
 - `role: detail` — sessões seguintes que **confirmam e detalham** o SSOT (nível de campo).
 
-Cada sessão gera sua própria transcrição sanitizada (arquivo numerado próprio — ex.
-`010-…` para o SSOT, `011-…` para a 1ª call de dúvidas). **Nunca** sobrescreva a transcrição
-do SSOT ao processar uma sessão de detalhe. Para transcrever uma sessão específica:
+### Sessões `type: video` ou `type: meeting`
+
+Geram sua própria transcrição sanitizada (arquivo numerado próprio — ex. `010-…` para o SSOT,
+`011-…` para a 1ª call de dúvidas). **Nunca** sobrescreva a transcrição do SSOT ao processar
+uma sessão de detalhe. Para transcrever uma sessão específica:
 
 ```
 python3 <transcription_dir>/transcribe.py --session <slug>   # --list mostra os slugs
 ```
 
-**Regra de merge nos passos 2–8:** uma sessão de detalhe deve *confirmar/afinar* o que o SSOT
-já estabeleceu — marque a origem (ex. "Fonte N / <data>") e **não** reescreva o processo macro
-já validado; em conflito real entre sessões, preserve ambas as versões com nota e data.
+### Sessões `type: document` (sem áudio)
+
+Não passam por `transcribe.py` — não há o que transcrever. Leia os arquivos declarados em
+`discovery.sessions[].docs` direto de `sources_dir/<slug>/` e aplique o mesmo princípio forense
+(preservar ambiguidade, não resolver pronome sem evidência, marcar incerteza) — adaptando só o
+formato de saída: sem falante/timestamp, cite a fonte por arquivo + página/seção (ex.
+`[manual-operacional.pdf, p.4]`) em vez de `[U0001] [MM:SS]`.
+
+### Regra de merge (vale para toda sessão, de qualquer tipo, nos passos 1–8)
+
+Uma sessão de detalhe deve *confirmar/afinar* o que o SSOT já estabeleceu — marque a origem
+(ex. "Fonte N / <data>" ou "Fonte N / <slug>") e **não** reescreva o processo macro já
+validado; em conflito real entre sessões, preserve ambas as versões com nota e data. É assim
+que a base de conhecimento cresce de forma incremental sem perder histórico.
 
 ---
 
@@ -119,7 +141,7 @@ A partir desse mapeamento, substitua os labels pelo nome real em toda a transcri
 
 ## Objetivo
 
-Extrair dado bruto de transcrições **sem distorção semântica**. O risco principal não é deixar sujeira — é limpar demais e destruir significado.
+Extrair dado bruto de transcrições e documentos de sessão **sem distorção semântica**. O risco principal não é deixar sujeira — é limpar demais e destruir significado.
 
 ## Princípio fundamental
 
