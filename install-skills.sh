@@ -55,4 +55,15 @@ for dir in "$SRC"/*/; do
 done
 
 echo "$n skills ativas em .claude/skills/ (modo: $MODE)"
-echo "Reinicie a sessão do Claude Code para que ele as carregue."
+echo
+echo "─────────────────────────────────────────────────────────────────────────────"
+echo "  PRÓXIMO PASSO — as skills só entram no PRÓXIMO boot do Claude Code."
+echo
+echo "  1. Reinicie a sessão do Claude Code (saia e abra de novo)."
+echo "  2. Cole este prompt no chat:"
+echo
+echo "       Repo recém-clonado. Roda o onboarding e me diz a próxima ação."
+echo
+echo "  O agente diagnostica o estado do repo e conduz do clone ao primeiro doc,"
+echo "  uma ação por vez. Sem passo 1, ele não enxerga skill nenhuma e improvisa."
+echo "─────────────────────────────────────────────────────────────────────────────"

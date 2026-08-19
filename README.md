@@ -14,11 +14,79 @@ no mesmo repositório.
 
 | Fase | O que resolve | Skills |
 |---|---|---|
-| **1 — Descobrir e documentar** | o que o processo **é**: transcrição forense → eventos → glossário → estados → falhas → contratos → diagramas → PDD | 15 |
+| **1 — Descobrir e documentar** | o que o processo **é**: transcrição forense → eventos → glossário → estados → falhas → contratos → diagramas → PDD | 18 |
 | **2 — Construir e operar** | como o robô **roda**: navegador, sessão remota, transporte por git, drift, teste, segredos | 6 |
 
 **Tudo que muda por cliente vive em `project.yaml`.** A máquina (`build.js`, `transcribe.py`, skills)
 é agnóstica: o mesmo kit serve qualquer processo, sem editar código.
+
+---
+
+## Começar aqui (projeto novo a partir do kit)
+
+### 0. O caminho de um comando (recomendado)
+
+Passe ao colega **o link do repo e esta linha**. Ela baixa o kit, cria o repositório dele, ativa as
+skills, instala o portal e **abre o Claude Code já com o prompt de onboarding dentro**:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/gstvux/rocketbot-probe/main/bootstrap.sh | bash -s <nome-do-projeto>
+```
+
+> **Por que o comando precisa terminar abrindo o Claude Code:** as skills carregam de
+> `.claude/skills/` **da pasta onde a sessão bootou**. A sessão que clona o kit nunca pode ser a
+> sessão que o usa — a pasta ainda não existia quando ela abriu. Por isso o prompt não serve como
+> ponto de entrada sozinho: ele é o segundo passo, e o `bootstrap.sh` existe para encadear os dois.
+
+Se preferir fazer à mão, ou se o `curl` não for uma opção no ambiente, os passos 1–3 abaixo são
+exatamente o que o script faz.
+
+### 1. Ter uma cópia desacoplada (à mão)
+
+O `bootstrap.sh` já faz isto. Se preferir manual:
+
+```bash
+git clone --depth 1 https://github.com/gstvux/rocketbot-probe.git <projeto-cliente>
+cd <projeto-cliente>
+rm -rf .git                                    # ← a linha que desacopla de verdade
+git init -b main && git add -A && git commit -m "chore: base do kit Rocketbot Probe"
+```
+
+O histórico começa do zero e o kit já nasce agnóstico — `project.yaml` sem cliente, glossário só
+com termos de método, `sources/` vazio. Não há faxina a fazer depois do clone.
+
+> **Remote não entra aqui — e é de propósito.** Repare que não há `gh repo create` acima. O
+> repositório **local** basta para trabalhar, e exigir disciplina de remote no dia 1 é exigir
+> justamente o que não acontece. O commit local é automático nos checkpoints do pipeline; o remote
+> vira necessário só na hora de **passar o processo adiante** — e aí a skill `handoff` resolve em
+> um comando, inclusive para quem nunca criou remote nenhum. Ver **Transferir o processo** abaixo.
+
+> **Sem vínculo significa sem atualização automática.** Melhoria futura no kit não chega sozinha ao
+> seu projeto. Se quiser puxar depois: `git remote add upstream https://github.com/gstvux/rocketbot-probe.git`
+> e faça cherry-pick do que interessar.
+
+### 2. Os três comandos do primeiro dia
+
+```bash
+./install-skills.sh                       # 1. ativa as skills no Claude Code  ← comece por aqui
+cd 001-docs && npm install && cd ..       # 2. dependências do portal
+export DEEPGRAM_API_KEY="sua-chave"       # 3. só se houver áudio/vídeo a transcrever
+```
+
+### 3. Reiniciar o Claude Code e colar este prompt
+
+```text
+Repo recém-clonado. Roda o onboarding e me diz a próxima ação.
+```
+
+**Não fique esperando o chat te dizer o que fazer** — é essa frase que abre o kit. O agente
+diagnostica o estado do repo (skills ativas? insumo? sessão declarada?) e conduz **uma ação por
+vez**, do clone ao primeiro documento, aplicando as guardas do discovery. Detalhe importante: as
+skills só carregam no **próximo boot** do Claude Code — rodar o `install-skills.sh` sem reiniciar
+é o tropeço número um.
+
+O resto deste README é referência para quando você quiser entender o porquê de cada peça. Para
+começar, os três comandos e a frase acima bastam.
 
 ---
 
@@ -208,6 +276,33 @@ python3 skills/automation-test-loop/scripts/runlog.py resumo
 8. runlog resumo               → onde quebrou; corrigir e voltar ao 4
 9. modo=piloto → modo=prod     → tirar a marca de teste é o critério de "pronto"
 ```
+
+---
+
+## Transferir o processo (handoff)
+
+Cada dev é dono de um processo — mas processo troca de dono: alguém sai, alguém assume, alguém
+divide. **É para isso que a base de conhecimento existe.** Quem recebe não deveria depender da
+cabeça de quem entrega.
+
+O que costuma quebrar não é a documentação, é a logística: o trabalho está numa pasta na máquina
+de uma pessoa. Por isso o kit **não pede remote no dia 1** — pede no dia do handoff, e resolve com
+o que você tiver:
+
+| Quem recebe vai… | Meio | Comando |
+|---|---|---|
+| **ler / entender** (gestor, analista, cliente) | portal publicado — um link, sem instalar nada | `cd 001-docs && npm run publish` |
+| **assumir o desenvolvimento**, sem remote no projeto | **bundle** — um arquivo, histórico inteiro | `git bundle create ../<projeto>-handoff.bundle --all` |
+| **assumir o desenvolvimento**, com remote | push + acesso | `git push -u origin main` |
+
+O bundle é o caminho para quem nunca criou remote: **nenhuma conta, nenhuma permissão** — vai por
+Drive, chat ou pendrive, e do outro lado `git clone <arquivo>.bundle` devolve o repositório
+completo, com todo o histórico. Peça a skill **`handoff`** que ela conduz, checa se algum segredo
+ou mídia entrou no pacote e lembra dos três itens que a documentação **não** transfere: acessos,
+relação com o cliente e o que ainda está incerto.
+
+> **Os commits acontecem sozinhos.** A cada passo do pipeline concluído o agente faz commit local
+> (nunca `push`). Você não precisa lembrar — quando o handoff chegar, a história já existe.
 
 ---
 
