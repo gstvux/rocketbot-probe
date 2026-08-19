@@ -23,6 +23,7 @@ Saída   : project.yaml → docs.files.domain_analysis  (working doc — anális
 
 Pré-requisitos : transcription-forensics (passo 1)
 Próximo passo  : semantic-canonicalization (→ glossary)
+Base já existe : skill `session-merge` — a sessão nova SOMA à base, não a sobrescreve
 ```
 
 > **Relação entre as saídas:** `domain_analysis` é o working doc (anotações, hipóteses, revisões).

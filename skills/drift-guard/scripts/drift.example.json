@@ -1,0 +1,28 @@
+{
+  "_comentario": [
+    "Cada par declara: FONTE (git, onde se edita) -> DESTINO (de onde a ferramenta executa).",
+    "Caminho relativo e resolvido a partir da pasta deste arquivo.",
+    "Use 'glob' quando o par for uma pasta inteira; omita para arquivo unico.",
+    "Regra: FONTE sempre vence. --fix copia fonte -> destino, nunca o contrario.",
+    "Ajuste os destinos para os caminhos REAIS da sua maquina (os abaixo sao exemplo)."
+  ],
+  "pares": [
+    {
+      "rotulo": "scripts",
+      "fonte": "robot/scripts",
+      "destino": "/mnt/d/rpa/<projeto>/scripts",
+      "glob": "*.py"
+    },
+    {
+      "rotulo": "sql",
+      "fonte": "robot/sql",
+      "destino": "/mnt/d/rpa/<projeto>/sql",
+      "glob": "*.sql"
+    },
+    {
+      "rotulo": "robot.db",
+      "fonte": "robot.db",
+      "destino": "/mnt/c/Rocketbot/robot.db"
+    }
+  ]
+}

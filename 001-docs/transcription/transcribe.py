@@ -37,6 +37,10 @@ docs       = cfg["docs"]
 # exista sessions[].
 sessions = disc.get("sessions")
 if not sessions:
+    if not disc.get("ssot_file"):
+        sys.exit("ERRO: nenhuma sessão declarada. Crie a pasta da sessão em "
+                 f"{disc.get('sources_dir', 'sources')}/session-N/ com o material e declare-a "
+                 "em discovery.sessions[] no project.yaml (há exemplo comentado lá).")
     sessions = [{
         "slug":             disc.get("transcription_slug") or f"{disc.get('session_date')}-{proj['process_slug']}",
         "file":             disc.get("ssot_file"),

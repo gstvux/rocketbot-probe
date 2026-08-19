@@ -20,9 +20,9 @@ sources/*
 *.m4a
 
 # ─── Segredos (chave da API Deepgram) e respostas brutas da API ─────────────────
-# Ignora tudo em .claude/ (a chave Deepgram vive aqui), MENOS as skills versionadas.
-.claude/*
-!.claude/skills/
+# `.claude/` é 100% local: guarda a chave Deepgram e os links de skill que o
+# ./install-skills.sh gera. As skills VERSIONADAS vivem em skills/ — um lugar só.
+.claude/
 *.key.txt
 001-docs/transcription/*.json
 
@@ -34,6 +34,42 @@ node_modules/
 # ─── Assets pesados da marca (só o Isologo.svg leve é versionado) ───────────────
 001-docs/brand/*.pdf
 001-docs/brand/*.zip
+
+# ─── Segredos da AUTOMAÇÃO (credenciais do robô) — negar por padrão ──────────────
+# Regra da skill `secrets-hitl`: segredo nunca entra no repo nem no artefato do robô.
+# Só o `*.example.json` (a FORMA, sem valor) é versionado.
+*cred*
+*credenciais*
+*.pfx
+*.p12
+*.pem
+*.key
+.env
+!*.example.json
+!*.example.md
+
+# ─── Estado de execução do robô — PRECISA sobreviver ao `reset --hard` do deploy ─
+# Produção é pull-only: o reset apaga o que está versionado, não o que é ignorado.
+# Contador dentro do artefato = robô repete o mesmo código e colide (skills
+# `automation-test-loop` e `rocketbot-git-transport`).
+dev.json
+run-log.jsonl
+journal.jsonl
+*contador*.txt
+estado/
+
+# ─── Artefatos das ferramentas de construção (CDP, deploy, coleta) ──────────────
+.cdp/
+shots/
+downloads/
+coleta/
+*.bak-*
+robot.db.bak*
+
+# ─── Saídas com dado de cliente ─────────────────────────────────────────────────
+*.xls
+*.xlsx
+*.csv
 
 # ─── Sistema ────────────────────────────────────────────────────────────────────
 .DS_Store

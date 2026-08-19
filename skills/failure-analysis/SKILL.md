@@ -23,6 +23,7 @@ Saída   : project.yaml → docs.files.failures
 
 Pré-requisitos : state-modeling (passo 4)
 Próximo passo  : contract-engineering (→ schema)
+Base já existe : skill `session-merge` — a sessão nova SOMA à base, não a sobrescreve
 ```
 
 > **Classificação de evidência no contexto RPA:**

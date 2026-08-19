@@ -23,6 +23,7 @@ Saída   : project.yaml → docs.files.glossary
 
 Pré-requisitos : domain-event-extraction (passo 2)
 Próximo passo  : state-modeling (→ state_machine)
+Base já existe : skill `session-merge` — a sessão nova SOMA à base, não a sobrescreve
 ```
 
 > **Uso cruzado:** o glossário gerado aqui alimenta TODOS os documentos subsequentes.

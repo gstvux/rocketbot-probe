@@ -24,6 +24,7 @@ Saída   : project.yaml → docs.files.diagrams
 
 Pré-requisitos : contract-engineering (passo 6)
 Próximo passo  : executive-technical-synthesis (→ delta_info, pdd)
+Base já existe : skill `session-merge` — a sessão nova SOMA à base, não a sobrescreve
 ```
 
 > **Renderização:** todos os diagramas em `diagrams` devem usar Mermaid (suportado pelo

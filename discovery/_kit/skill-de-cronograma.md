@@ -109,11 +109,11 @@ Snippet de código
 gantt
     dateFormat  YYYY-MM-DD
     axisFormat  %d/%m (S%W)
-    title Sprints de Automação — EnvioBoletos (3 Semanas)
+    title Sprints de Automação — Exemplo (3 Semanas)
 
     section S1 · Fundação
     Setup + Variáveis           :done,    s1_1, 2026-08-03, 3d
-    loginFNET (OTP) [Gate]      :crit, active, s1_2, after s1_1, 2d
+    login sistema-alvo (OTP)  [Gate]      :crit, active, s1_2, after s1_1, 2d
 
     section S2 · Miolo & Shadow
     Títulos + Tabela + Junção   :active,  s2_1, after s1_2, 3d

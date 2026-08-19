@@ -26,6 +26,7 @@ Saída   : project.yaml → docs.files.transcription           (sessão SSOT)
 
 Pré-requisitos : nenhum — é o ponto de partida do pipeline
 Próximo passo  : domain-event-extraction (→ domain_analysis, domain_events)
+Base já existe : skill `session-merge` (regra de incorporação incremental, passos 1–8)
 ```
 
 > **Convenção de nomes:** use `docs-file-ordering` para prefixar arquivos.
@@ -35,10 +36,10 @@ Próximo passo  : domain-event-extraction (→ domain_analysis, domain_events)
 
 ## Sessões: a unidade de entrada de conhecimento
 
-Cada sessão é uma **pasta** em `sources_dir/<slug>/` (ex.: `sources/2026-01-15-levantamento-
-processo/`) com todo arquivo que ela trouxe — vídeo/áudio, export do cliente, PDFs, planilhas.
-`discovery.sessions[]` descreve cada pasta: `slug` (= nome da pasta), `type` (`video` |
-`meeting` | `document`), `date`, `role`.
+Cada sessão é uma **pasta** em `sources_dir/session-N/` (ex.: `sources/session-1/`) com todo
+arquivo que ela trouxe — vídeo/áudio, export do cliente, PDFs, planilhas. O `N` é a **ordem de
+chegada**, não a data. `discovery.sessions[]` descreve cada pasta: `slug` (= nome da pasta),
+`title` (assunto legível), `type` (`video` | `meeting` | `document`), `date`, `role`, `status`.
 
 O processo de levantamento pode ter **mais de uma sessão** (call inicial + calls de
 dúvidas/detalhamento + documentos entregues depois). Cada nova sessão traz conhecimento que
@@ -65,12 +66,20 @@ Não passam por `transcribe.py` — não há o que transcrever. Leia os arquivos
 formato de saída: sem falante/timestamp, cite a fonte por arquivo + página/seção (ex.
 `[manual-operacional.pdf, p.4]`) em vez de `[U0001] [MM:SS]`.
 
-### Regra de merge (vale para toda sessão, de qualquer tipo, nos passos 1–8)
+### Regra de merge → skill `session-merge`
 
-Uma sessão de detalhe deve *confirmar/afinar* o que o SSOT já estabeleceu — marque a origem
-(ex. "Fonte N / <data>" ou "Fonte N / <slug>") e **não** reescreva o processo macro já
-validado; em conflito real entre sessões, preserve ambas as versões com nota e data. É assim
-que a base de conhecimento cresce de forma incremental sem perder histórico.
+No passo 1 a regra é simples porque **não há fusão**: cada sessão gera seu próprio arquivo de
+transcrição (`010-…` para o SSOT, `011-…`, `012-…` para as de detalhe). Nunca sobrescreva a
+transcrição de uma sessão anterior.
+
+A fusão de verdade acontece nos passos 2–8, onde os artefatos são acumulativos (um catálogo de
+eventos, um glossário, uma máquina de estados). Essa regra — as quatro classes de conhecimento
+(NOVO / CONFIRMA / REFINA / CONTRADIZ), a marcação de proveniência e o tratamento de conflito —
+é governada pela skill **`session-merge`**. Consulte-a sempre que a base já tiver conteúdo.
+
+Princípio que vale desde aqui: marque a origem (`Fonte: session-N (<data>) · [[U####]]`), não
+reescreva o processo macro já validado, e em conflito real preserve **ambas** as versões com
+nota e data.
 
 ---
 

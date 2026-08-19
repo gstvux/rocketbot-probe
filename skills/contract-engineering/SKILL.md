@@ -24,6 +24,7 @@ Saída   : project.yaml → docs.files.schema
 
 Pré-requisitos : failure-analysis (passo 5)
 Próximo passo  : diagram-as-code (→ diagrams)
+Base já existe : skill `session-merge` — a sessão nova SOMA à base, não a sobrescreve
 ```
 
 > **`schema` é insumo direto para o PDD** (`project.yaml → docs.files.pdd`) — é onde as

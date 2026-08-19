@@ -59,7 +59,7 @@ Fonte única do cronograma. Modelo (parseado com `js-yaml`, já dependência do 
 
 ```yaml
 meta:
-  projeto: "Sprints de Automação — EnvioBoletos"
+  projeto: "Automação de Processo — Exemplo"
   versao: "1.0.0"
   frequencia: "3 Semanas · Dias úteis"   # vira badge no header do card (opcional)
   inicio: "2026-08-03"                    # opcional — ativa o eixo por DATA (dd/mm)
@@ -77,7 +77,7 @@ fases:
         duracao_estimada: 3d   # m | h | d  (ex.: 30m, 2h, 3d, 1.5d) — ou número (minutos)
         depende_de: []         # ids de tarefas predecessoras
       - id: TSK_102
-        nome: "loginFNET (OTP)"
+        nome: "Login no sistema-alvo (OTP)"
         responsavel: "Agente - RPA"
         duracao_estimada: 2d
         depende_de: [TSK_101]

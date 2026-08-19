@@ -6,8 +6,8 @@
 #  edita a máquina. Preencha `client` e `name` conforme o projeto (as skills fazem isso
 #  ao processar a call). A pasta `brand:` é padronizada — não a altere.
 #
-#  Fluxo: crie a pasta da sessão em sources/<slug>/ (vídeo ou documentos) → transcribe.py
-#  (se houver áudio) → skills passos 1–8 → npm run build.
+#  Fluxo: crie a pasta da sessão em sources/session-N/ (vídeo ou documentos) → transcribe.py
+#  (se houver áudio) → skills passos 1–8 → npm run build → inferências do dev em discovery/.
 # ═══════════════════════════════════════════════════════════════════════════════
 
 # ─── IDENTIDADE DO PROJETO ───────────────────────────────────────────────────
@@ -41,37 +41,53 @@ systems: []
 # ─── DISCOVERY (fontes de verdade) ───────────────────────────────────────────
 # O levantamento pode ter MÚLTIPLAS sessões (call inicial, calls de dúvidas, documentos
 # entregues pelo cliente...). Cada sessão é uma entrada em `sessions[]` E UMA SUBPASTA em
-# `sources_dir/<slug>/` — todo arquivo que aquela sessão trouxe (vídeo, export do cliente,
-# PDF, planilha) fica dentro dela. A 1ª sessão (role: ssot) é a referência base; as demais
-# (role: detail) CONFIRMAM/DETALHAM o que já existe — o conhecimento novo de cada sessão é
-# incorporado à base atual, nunca a sobrescreve (skill `transcription-forensics` governa
-# essa regra de merge). transcribe.py resolve os caminhos por sessão (`--session <slug>`;
-# sem flag processa a 1ª = SSOT) — só se aplica a sessões `type: video|meeting`; sessões
-# `type: document` são lidas direto, sem transcrição. Os `.slug` alimentam o painel de
-# citação clicável do portal ([[U####]] / [[P####]]).
+# `sources_dir/session-N/` — todo arquivo que aquela sessão trouxe (vídeo, export do cliente,
+# PDF, planilha) fica dentro dela. O N é a ORDEM DE CHEGADA (session-1, session-2, …), não a
+# data: o insumo é particionado por quando chegou. Use `title` para o assunto legível.
+# A 1ª sessão (role: ssot) é a referência base; as demais (role: detail) CONFIRMAM/DETALHAM o
+# que já existe — o conhecimento novo de cada sessão é incorporado à base atual, nunca a
+# sobrescreve (skill `session-merge` governa essa regra em TODOS os passos 1–8).
+# transcribe.py resolve os caminhos por sessão (`--session <slug>`; sem flag processa a 1ª =
+# SSOT) — só se aplica a sessões `type: video|meeting`; sessões `type: document` são lidas
+# direto, sem transcrição. Os `.slug` alimentam o painel de citação clicável do portal
+# ([[U####]] / [[P####]]) e nomeiam o .txt em docs.transcription_dir/<slug>.txt.
 discovery:
   ssot_type: "video"        # video | meeting | document — fallback só usado no formato legado (sem sessions[])
-  sources_dir: "sources"    # cada sessão é uma subpasta: sources_dir/<slug>/ (gitignored — só .gitkeep versionado)
+  sources_dir: "sources"    # cada sessão é uma subpasta: sources_dir/session-N/ (gitignored — só .gitkeep versionado)
+
+  # Pasta das INFERÊNCIAS DO DEV (camada 3): pesquisa, decisões de arquitetura, seletores,
+  # specs e prompts estruturados que direcionam a construção do robô. Formato LIVRE — sem
+  # numeração NNN, sem estrutura obrigatória: são .md de anotação, organizados como o dev
+  # preferir. Não entra no portal (build.js só varre docs.root). Ver CLAUDE.md para a regra
+  # de precedência entre esta pasta e a documentação do processo.
+  inferences_dir: "discovery"
 
   sessions: []
   # Exemplo (descomente e ajuste ao receber a primeira sessão):
   # sessions:
-  #   - slug: "2026-01-15-levantamento-processo"   # nome da subpasta em sources_dir/ e prefixo dos artefatos gerados
+  #   - slug: "session-1"                          # nome da subpasta em sources_dir/ e prefixo dos artefatos gerados
+  #     title: "Levantamento do processo"          # assunto legível (o slug guarda só a ordem) — opcional
   #     type: "video"                              # video | meeting | document — natureza do material desta sessão
   #     file: "2026-01-15-10-00-00.mp4"            # arquivo dentro de sources_dir/<slug>/ (vídeo/áudio a transcrever)
   #     date: "2026-01-15"
   #     duration_minutes: 50
   #     role: "ssot"                               # 1ª sessão = referência base
-  #   - slug: "2026-01-22-call-duvidas"
+  #     status: "processed"                        # pending | processed — já incorporada aos docs? (ver session-merge)
+  #     processed_at: "2026-01-16"                 # quando o conhecimento entrou na base
+  #   - slug: "session-2"
+  #     title: "Call de dúvidas — regras de exceção"
   #     type: "meeting"
   #     file: "2026-01-22-09-00-00.mp4"
   #     date: "2026-01-22"
   #     role: "detail"                             # confirma/detalha o SSOT
   #     client_transcript: "2026-01-22-export.txt" # export bruto do cliente, também dentro de sources_dir/<slug>/
-  #   - slug: "2026-02-03-manual-operacional"
+  #     status: "pending"                          # ainda não refletida nos docs — o pipeline deve rodar
+  #   - slug: "session-3"
+  #     title: "Manual operacional entregue pelo cliente"
   #     type: "document"                           # sessão sem áudio/vídeo — a pasta só tem documentos
   #     date: "2026-02-03"
   #     role: "detail"
+  #     status: "pending"
   #     docs: ["manual-operacional.pdf", "planilha-excecoes.xlsx"]  # arquivos dentro de sources_dir/<slug>/, lidos direto (sem transcribe.py)
 
 # ─── DOCUMENTAÇÃO ────────────────────────────────────────────────────────────

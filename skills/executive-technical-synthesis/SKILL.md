@@ -29,6 +29,7 @@ Saída   : project.yaml → docs.files.delta_info         (lacunas + checklist a
 
 Pré-requisitos : diagram-as-code (passo 7) — todos os passos anteriores
 Próximo passo  : rpa-docs-builder (compilar e publicar HTML)
+Base já existe : skill `session-merge` — a sessão nova SOMA à base, não a sobrescreve
 ```
 
 > **Saídas e públicos:**

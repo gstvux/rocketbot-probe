@@ -12,7 +12,7 @@ dependências de cada tarefa.
 
 - **Trilhas (S1 · S2 · S3):** cada fase é um bloco de cor semântica — Fundação (Indigo),
   Miolo & Shadow (Blue), Validação (Emerald). A cor sinaliza o momento do projeto.
-- **Contorno vermelho:** tarefa **crítica** — o gargalo real na trilha (ex.: `loginFNET (OTP)`).
+- **Contorno vermelho:** tarefa **crítica** — o gargalo real na trilha (ex.: `Login no sistema-alvo (OTP)`).
 - **Círculo vermelho ●:** *gate* de bloqueio (checkpoint de aprovação, duração zero).
 - **Losango violeta ◆:** *marco* / milestone (ex.: **Go-Live em produção**).
 - **Linha vermelha vertical:** **hoje** — o progresso atual contra o planejado.

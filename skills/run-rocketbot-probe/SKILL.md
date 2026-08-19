@@ -7,7 +7,7 @@ O "app" deste repo é um **portal HTML estático** (o *Hub*): [001-docs/build.js
 compila os Markdown de [001-docs/](001-docs/) — lendo identidade e caminhos de
 [project.yaml](project.yaml) — para `001-docs/dist/`, e [001-docs/dev-server.js](001-docs/dev-server.js)
 serve `dist/` em `http://localhost:<PORT>`. Você o dirige com o driver Python + Playwright
-[.claude/skills/run-rocketbot-probe/driver.py](.claude/skills/run-rocketbot-probe/driver.py),
+[skills/run-rocketbot-probe/driver.py](skills/run-rocketbot-probe/driver.py),
 que **compila, sobe o servidor numa porta livre e tira print de cada página** num comando só.
 
 **Todos os caminhos abaixo são relativos à raiz do repo (`rocketbot-probe/`).**
@@ -44,7 +44,7 @@ como **"Rocketbot probe docs"** (estado pristino — é o que você vê hoje, co
 Um comando, a partir da raiz do repo:
 
 ```bash
-python3 .claude/skills/run-rocketbot-probe/driver.py
+python3 skills/run-rocketbot-probe/driver.py
 ```
 
 O driver: roda `node build.js` → sobe `dev-server.js` numa **porta livre** (evita colisão
@@ -70,11 +70,11 @@ Depois **abra os PNGs e olhe** — `.driver-shots/00-hub.png` (o Hub) e um
 Opções úteis:
 
 ```bash
-python3 .claude/skills/run-rocketbot-probe/driver.py --out /tmp/shots    # outro diretório de prints
-python3 .claude/skills/run-rocketbot-probe/driver.py --no-build          # usa o dist/ já compilado
-python3 .claude/skills/run-rocketbot-probe/driver.py --port 8123         # porta fixa
-python3 .claude/skills/run-rocketbot-probe/driver.py --keep              # deixa o servidor no ar p/ inspeção
-python3 .claude/skills/run-rocketbot-probe/driver.py --url http://localhost:8123   # dirige um servidor já rodando (não sobe outro)
+python3 skills/run-rocketbot-probe/driver.py --out /tmp/shots    # outro diretório de prints
+python3 skills/run-rocketbot-probe/driver.py --no-build          # usa o dist/ já compilado
+python3 skills/run-rocketbot-probe/driver.py --port 8123         # porta fixa
+python3 skills/run-rocketbot-probe/driver.py --keep              # deixa o servidor no ar p/ inspeção
+python3 skills/run-rocketbot-probe/driver.py --url http://localhost:8123   # dirige um servidor já rodando (não sobe outro)
 ```
 
 ## Direct invocation — só o build, ou só o servidor

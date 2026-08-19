@@ -10,7 +10,7 @@
 # ═══════════════════════════════════════════════════════════════════════════════
 
 meta:
-  projeto: "Sprints de Automação — EnvioBoletos"
+  projeto: "Automação de Processo — Exemplo"
   versao: "1.0.0"
   frequencia: "3 Semanas · Dias úteis"
   inicio: "2026-08-03"        # opcional — ativa o eixo por data (dd/mm) e a semântica de "hoje"
@@ -28,7 +28,7 @@ fases:
         duracao_estimada: 3d
         depende_de: []
       - id: TSK_102
-        nome: "loginFNET (OTP)"
+        nome: "Login no sistema-alvo (OTP)"
         responsavel: "Agente - RPA"
         duracao_estimada: 2d
         depende_de: [TSK_101]
@@ -39,7 +39,7 @@ fases:
     dependencias: [FASE_01]
     tarefas:
       - id: TSK_201
-        nome: "Títulos + tabela + junção"
+        nome: "Extração + consolidação dos dados"
         responsavel: "Agente - RPA"
         duracao_estimada: 3d
         depende_de: [TSK_102]

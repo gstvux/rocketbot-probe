@@ -26,7 +26,7 @@ from pathlib import Path
 
 # Raiz do repo = dois níveis acima de .claude/skills/run-rocketbot-probe/
 SKILL_DIR = Path(__file__).resolve().parent
-REPO = SKILL_DIR.parents[2]
+REPO = SKILL_DIR.parents[1]
 DOCS = REPO / "001-docs"
 
 

@@ -23,6 +23,10 @@ Documento principal : project.yaml → docs.files.pdd
 
 > Para ver os nomes e prefixos reais dos arquivos deste projeto, consulte `project.yaml`.
 
+> **Escopo:** esta convenção governa **apenas** `project.yaml → docs.root`. A pasta de
+> inferências do dev (`discovery.inferences_dir`) é **livre-forma** — sem numeração, sem
+> estrutura obrigatória. Não renumere, não renomeie, não reorganize nada lá dentro.
+
 ---
 
 ## Objetivo

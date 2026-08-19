@@ -22,6 +22,7 @@ Saída   : project.yaml → docs.files.state_machine
 
 Pré-requisitos : semantic-canonicalization (passo 3)
 Próximo passo  : failure-analysis (→ failures)
+Base já existe : skill `session-merge` — a sessão nova SOMA à base, não a sobrescreve
 ```
 
 > **Relação com diagram-as-code (passo 7):** o modelo de estados gerado aqui alimenta
