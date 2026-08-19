@@ -4,6 +4,8 @@
 #
 #   curl -fsSL https://raw.githubusercontent.com/gstvux/rocketbot-probe/main/bootstrap.sh | bash -s <nome-do-projeto>
 #
+#   --no-launch   não abre o CLI ao final (use no desktop app: a sessão abre pela UI)
+#
 # Faz, nesta ordem (a ordem importa):
 #   1. baixa a árvore do kit SEM o histórico do repo de origem  (projeto desacoplado)
 #   2. `git init` + commit inicial                              (o diagnóstico do kit exige um repo git)
@@ -18,7 +20,15 @@ set -euo pipefail
 KIT_REPO="${KIT_REPO:-gstvux/rocketbot-probe}"
 KIT_URL="${KIT_URL:-https://github.com/$KIT_REPO.git}"   # override p/ testar contra um clone local
 PROMPT="Repo recém-clonado. Roda o onboarding e me diz a próxima ação."
-DEST="${1:-}"
+DEST=""
+LAUNCH=1
+for arg in "$@"; do
+  case "$arg" in
+    --no-launch) LAUNCH=0 ;;          # desktop app: a sessão se abre pela UI, não pelo CLI
+    -*) echo "opção desconhecida: $arg" >&2; exit 2 ;;
+    *)  [ -z "$DEST" ] && DEST="$arg" ;;
+  esac
+done
 
 say()  { printf '\033[1;36m▸\033[0m %s\n' "$*"; }
 warn() { printf '\033[1;33m!\033[0m %s\n' "$*"; }
@@ -59,16 +69,19 @@ fi
 printf '\n\033[1;32m✓\033[0m kit pronto em \033[1m%s\033[0m — %s skills ativas\n\n' "$(pwd)" "$n_skills"
 
 # ─── 5. abrir o Claude Code com o prompt (boot novo = skills carregadas) ────
-if command -v claude >/dev/null 2>&1 && { : </dev/tty; } 2>/dev/null; then   # abre de fato, não só existe
+if [ "$LAUNCH" = "1" ] && command -v claude >/dev/null 2>&1 && { : </dev/tty; } 2>/dev/null; then
   say "abrindo o Claude Code…"
   exec claude "$PROMPT" < /dev/tty
 else
-  command -v claude >/dev/null 2>&1 || warn "Claude Code não encontrado no PATH"
+  [ "$LAUNCH" = "0" ] || command -v claude >/dev/null 2>&1 || warn "Claude Code não encontrado no PATH"
   cat <<EOF
-Último passo — abra o Claude Code NESTA pasta e cole:
+Último passo — abra uma sessão do Claude Code NESTA pasta e mande:
 
     $PROMPT
 
-  cd $(basename "$(pwd)") && claude "$PROMPT"
+  · Desktop app: aba Code → Project folder = $(pwd) → cole o prompt acima
+  · CLI:         cd $(basename "$(pwd)") && claude "$PROMPT"
+
+Em ambos, tem de ser uma sessão NOVA — as skills carregam no boot.
 EOF
 fi

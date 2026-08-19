@@ -48,11 +48,21 @@ for dir in "$SRC"/*/; do
   rm -rf "$target"
   if [ "$MODE" = "copy" ]; then
     cp -r "$dir" "$target"
+  elif ln -s "../../skills/$name" "$target" 2>/dev/null; then
+    :
   else
-    ln -s "../../skills/$name" "$target"
+    # Windows sem Developer Mode não cria symlink — cai para cópia em vez de morrer.
+    cp -r "$dir" "$target"
+    fallback=1
   fi
   n=$((n+1))
 done
+
+if [ "${fallback:-0}" = "1" ]; then
+  MODE="copy (symlink indisponível — normal no Windows sem Developer Mode)"
+  echo "  nota: as skills foram COPIADAS. Editar skills/ não vale na hora —"
+  echo "        rode ./install-skills.sh de novo depois de alterar uma skill."
+fi
 
 echo "$n skills ativas em .claude/skills/ (modo: $MODE)"
 echo

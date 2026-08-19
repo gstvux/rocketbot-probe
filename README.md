@@ -41,6 +41,31 @@ curl -fsSL https://raw.githubusercontent.com/gstvux/rocketbot-probe/main/bootstr
 Se preferir fazer à mão, ou se o `curl` não for uma opção no ambiente, os passos 1–3 abaixo são
 exatamente o que o script faz.
 
+### 0b. Se o time usa o **Claude Code desktop app**
+
+Funciona igual — o kit não depende do CLI. Muda só quem abre a sessão. A ordem importa, porque a
+pasta do projeto **precisa existir antes** de você poder selecioná-la:
+
+1. Na aba **Code**, abra uma sessão em qualquer pasta e o **terminal integrado** (`Ctrl+`` `).
+2. Rode o bootstrap com `--no-launch` (o desktop abre a sessão pela UI, não pelo CLI):
+   ```bash
+   curl -fsSL https://raw.githubusercontent.com/gstvux/rocketbot-probe/main/bootstrap.sh | bash -s cliente-x --no-launch
+   ```
+3. Abra uma **sessão nova** com **Project folder** = a pasta recém-criada e mande:
+   ```text
+   Repo recém-clonado. Roda o onboarding e me diz a próxima ação.
+   ```
+
+**Sessão nova não é detalhe:** as skills carregam no boot da sessão. Reaproveitar a sessão que
+rodou o bootstrap dá o mesmo resultado de não ter rodado nada.
+
+**No Windows**, duas coisas antes: instale o **Git for Windows** (a aba Code exige na primeira
+abertura — reinicie o app depois) e prefira o ambiente **WSL** no seletor de Environment, onde
+`bash`, Node e Python se comportam como neste README. Se rodar em Windows nativo, o
+`install-skills.sh` detecta que o symlink não está disponível (Developer Mode desligado) e **copia**
+as skills em vez de linkar — funciona igual, só que editar `skills/` deixa de valer na hora: rode
+o script de novo depois de alterar uma skill.
+
 ### 1. Ter uma cópia desacoplada (à mão)
 
 O `bootstrap.sh` já faz isto. Se preferir manual:
