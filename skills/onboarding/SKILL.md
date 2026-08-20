@@ -55,8 +55,12 @@ travar o onboarding num campo que a máquina preenche sozinha é ruído.
 
 Probing é a etapa que produz a **base de conhecimento do processo** — o insumo de todas as
 atividades seguintes (spec do robô, seletores, tratamento de exceção, construção no Rocketbot
-Studio via MCP). Documentação errada aqui não fica errada aqui: ela vira robô errado três semanas
-depois, e ninguém desconfia da origem. Estas são as guardas que você aplica sem esperar que peçam:
+Studio via MCP). O que se decide aqui é herdado por tudo que vem depois, então vale deixar as
+escolhas explícitas em vez de implícitas.
+
+Os pontos abaixo são os **defaults do kit** — o que fazer quando ninguém disse o contrário. **O dev
+é o dono do processo:** se ele preferir outro caminho, diga o custo uma vez e siga a decisão dele.
+Repetir o alerta a cada passo não protege ninguém, só cansa.
 
 1. **Fato só existe se está no insumo.** Se a transcrição não disse, não vá para o doc — vá para a
    lista de perguntas da próxima sessão. Preencher lacuna com plausibilidade é o modo de falha mais

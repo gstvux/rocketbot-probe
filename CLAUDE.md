@@ -44,7 +44,7 @@ existe**. Nesse caso a única resposta correta é mandar rodar `./install-skills
 sessão do Claude Code. Sem isso não há uma skill sequer carregada, e você vai **improvisar
 documentação** — que é exatamente o fracasso que este kit existe para evitar. Um agente sem as
 skills escreve um resumo de reunião bonito; o kit existe para produzir base de conhecimento
-rastreável. Não são a mesma coisa, e a diferença só aparece tarde demais.
+rastreável. Não são a mesma coisa.
 
 **Nunca** responda a um repo zerado com um resumo do README. Responda com **a próxima ação única**
 — um comando, uma pasta a criar, um campo a preencher. O dev volta para pedir a seguinte.

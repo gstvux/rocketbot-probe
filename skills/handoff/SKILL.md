@@ -81,12 +81,12 @@ O `.gitignore` do kit já dá o recorte certo — **não o contorne para "mandar
 
 **Sobre `sources/` não viajar:** é correto e deliberado, mas **avise quem recebe**. Se a gravação
 original for necessária depois (uma dúvida que a transcrição não fecha), ela mora com quem
-entregou — combine onde, ou o handoff fica com um buraco que só aparece semanas depois.
+entregou — combine onde ficam. É uma linha na entrega e poupa uma busca depois.
 
 ## O que a documentação não transfere
 
 Seja honesto sobre o limite. Mesmo com a base completa, três coisas ficam com quem sai — nomeie-as
-explicitamente na entrega, porque elas são o que quem recebe vai descobrir do jeito difícil:
+explicitamente na entrega, porque nenhuma delas sai do repositório:
 
 1. **Acessos e credenciais** — nunca estão no repo, por desenho. Liste *o que* é preciso e *com
    quem* se pede; a transferência é com o time de segurança/cliente, não no pacote.
